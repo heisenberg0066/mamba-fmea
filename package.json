@@ -2,7 +2,7 @@
   "name": "mamba-fmea",
   "productName": "Mamba FMEA",
   "version": "0.1.0",
-  "description": "Offline AIAG-VDA FMEA (DFMEA / PFMEA / FMEA-MSR) with Action Priority, control plans and a pipe-network hydraulics module",
+  "description": "Mamba FMEA — AIAG-VDA FMEA (DFMEA, PFMEA, FMEA-MSR) and pipe-network hydraulics, offline",
   "author": "Ammar",
   "license": "MIT",
   "main": "src/main.cjs",
@@ -13,15 +13,86 @@
     "test:ui": "bash test/run-ui.sh",
     "dist": "electron-builder --win --x64 --publish never"
   },
-  "repository": { "type": "git", "url": "https://github.com/heisenberg0066/mamba-fmea.git" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/heisenberg0066/mamba-fmea.git"
+  },
   "dependencies": {
-    "coolprop-wasm": "6.6.0",
     "exceljs": "^4.4.0"
   },
   "devDependencies": {
     "electron": "33.4.11",
     "electron-builder": "25.1.8",
     "epanet-js": "^0.9.0",
-    "resedit": "^2.0.3"
+    "resedit": "^2.0.3",
+    "coolprop-wasm": "6.6.0"
+  },
+  "build": {
+    "appId": "com.ammar.mambafmea",
+    "productName": "Mamba FMEA",
+    "copyright": "© 2026 Ammar — MIT licence",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "build/icon.png",
+      "package.json",
+      "!**/*.map"
+    ],
+    "asar": true,
+    "npmRebuild": false,
+    "afterPack": "build/afterPack.cjs",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Mamba FMEA",
+      "include": "build/installer.nsh",
+      "artifactName": "MambaFMEA-Setup-${version}-x64.${ext}",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "MambaFMEA-Portable-${version}-x64.${ext}"
+    },
+    "artifactName": "MambaFMEA-${version}-win-${arch}.${ext}",
+    "fileAssociations": [
+      {
+        "ext": "mfmea",
+        "name": "Mamba FMEA project",
+        "role": "Editor",
+        "icon": "build/icon.ico"
+      }
+    ]
   }
 }

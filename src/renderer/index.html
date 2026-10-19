@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: blob:; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; img-src 'self' data: blob:;">
+<title>Mamba FMEA</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="brand"><span class="logo">◆</span> <b>Mamba</b> FMEA <span class="ver" id="ver"></span> <span class="proj" id="projName"></span></div>
+    <div class="top-actions" id="topActions"></div>
+  </header>
+  <nav id="sidebar"></nav>
+  <main id="main"><div class="loading" id="loading">Loading…</div></main>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
