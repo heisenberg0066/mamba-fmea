@@ -10,7 +10,11 @@ const selftestDir = process.env.MAMBA_SELFTEST || (argv.find((a) => a.startsWith
 const shotsDir = process.env.MAMBA_SHOTS || '';
 let win;
 const coreUrl = (rel) => pathToFileURL(path.join(__dirname, 'core', rel)).href;
-const xlsx = () => import(coreUrl('fmea/xlsx.js'));
+const xlsx = async () => {
+  const b = path.join(__dirname, 'gen', 'xlsx.bundle.cjs');
+  if (fs.existsSync(b)) return require(b);
+  return import(coreUrl('fmea/xlsx.js'));
+};
 
 function createWindow() {
   const [ww, wh] = (process.env.MAMBA_WINSIZE || '1480x920').split('x').map(Number);

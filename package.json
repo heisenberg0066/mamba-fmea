@@ -2,7 +2,7 @@
   "name": "mamba-fmea",
   "productName": "Mamba FMEA",
   "version": "0.1.0",
-  "description": "Mamba FMEA — AIAG-VDA FMEA (DFMEA, PFMEA, FMEA-MSR) and pipe-network hydraulics, offline",
+  "description": "Mamba FMEA \u2014 AIAG-VDA FMEA (DFMEA, PFMEA, FMEA-MSR) and pipe-network hydraulics, offline",
   "author": "Ammar",
   "license": "MIT",
   "main": "src/main.cjs",
@@ -11,26 +11,27 @@
     "start": "electron .",
     "test": "node test/run-tests.mjs",
     "test:ui": "bash test/run-ui.sh",
-    "dist": "electron-builder --win --x64 --publish never"
+    "dist": "node build/bundle-main.mjs && electron-builder --win --x64 --publish never",
+    "bundle": "node build/bundle-main.mjs"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/heisenberg0066/mamba-fmea.git"
   },
-  "dependencies": {
-    "exceljs": "^4.4.0"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "coolprop-wasm": "6.6.0",
     "electron": "33.4.11",
     "electron-builder": "25.1.8",
     "epanet-js": "^0.9.0",
+    "esbuild": "^0.24.2",
     "resedit": "^2.0.3",
-    "coolprop-wasm": "6.6.0"
+    "exceljs": "^4.4.0"
   },
   "build": {
     "appId": "com.ammar.mambafmea",
     "productName": "Mamba FMEA",
-    "copyright": "© 2026 Ammar — MIT licence",
+    "copyright": "\u00a9 2026 Ammar \u2014 MIT licence",
     "directories": {
       "output": "dist",
       "buildResources": "build"
