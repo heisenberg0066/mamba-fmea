@@ -116,7 +116,7 @@ export function solve(net, fluid, opts = {}) {
   const run = opts.solver === 'hardy' ? hardyCross : gga;
   let res; const statusLog = [];
   for (let round = 0; round < 12; round++) {
-    res = run(C, opts); if (!res.ok) break;
+    res = run(C, opts); if (!res.ok && !res.Q) break;
     // status checks: check valves, pumps (no reverse flow), nozzles (no inflow)
     let changed = false;
     C.links.forEach((e, k) => {
@@ -128,7 +128,7 @@ export function solve(net, fluid, opts = {}) {
     });
     if (!changed) break;
   }
-  if (!res.ok) return res;
+  if (!res.ok) { delete res.Q; delete res.H; return res; }
   return finish(net, C, res, fluid, opts, statusLog);
 }
 
@@ -143,7 +143,7 @@ function gga(C, opts) {
   for (it = 1; it <= opts.maxIter; it++) {
     const A = Array.from({ length: nf }, () => Array(nf).fill(0)); const b = Array(nf).fill(0);
     // continuity residual: A21 Q - q  ; inflow positive at 'to' node
-    const cont = Array(nodes.length).fill(0); links.forEach((e, k) => { cont[e.j] += Q[k]; cont[e.i] -= Q[k]; });
+    const cont = Array(nodes.length).fill(0); links.forEach((e, k) => { if (!act[k]) return; cont[e.j] += Q[k]; cont[e.i] -= Q[k]; });
     free.forEach((i, r) => (b[r] = cont[i] - nodes[i].q));
     const Dinv = links.map((e, k) => (act[k] ? 1 / dFx(e, Q[k]) : 0)); const Fk = links.map((e, k) => (act[k] ? Fx(e, Q[k]) : 0));
     links.forEach((e, k) => {
@@ -165,7 +165,7 @@ function gga(C, opts) {
     if (rel < opts.tol) break;
   }
   links.forEach((e, k) => (e.prevQ = Q[k]));
-  if (rel > 1e-4) return { ok: false, error: `Solver did not converge (relative flow change ${rel.toExponential(2)} after ${opts.maxIter} iterations).` };
+  if (rel > 1e-4) return { ok: false, Q, H, error: `Solver did not converge (relative flow change ${rel.toExponential(2)} after ${opts.maxIter} iterations).` };
   return { ok: true, Q, H, iterations: Math.min(it, opts.maxIter), trace, rel, method: 'gga' };
 }
 
@@ -233,11 +233,13 @@ function finish(net, C, res, fluid, opts, statusLog) {
     if (e.type === 'pump') {
       const head = res.H[e.j] - res.H[e.i]; const P = rho * g * Math.max(Q, 0) * head; const pump = e.src.pump; const s = pump.speed ?? 1;
       const eta = interp(pump.eff, Q / s) / 100; const npshr = (pump.npshr || []).length ? interp(pump.npshr, Q / s) * s * s : NaN;
-      // NPSH available at the suction node: absolute pressure head + velocity head − vapour pressure head
+      // NPSH available at the suction node. Node heads follow the EPANET convention (velocity heads are not carried
+      // separately), so the suction head is treated as the total head: NPSHa = (H_s − z_s) + (p_atm − p_v)/(ρg).
+      // This equals the textbook energy balance from the supply surface and never credits the velocity head twice.
       const sn = nodes[e.i]; const pS = rho * g * (res.H[e.i] - sn.z) + Patm;
       let Vs = 0; links.forEach((x, m) => { if (x.type === 'pipe' && (x.j === e.i || x.i === e.i) && m !== k) { const v = Math.abs(res.Q[m]) / area(x.src.pipe.D); if (v > Vs) Vs = v; } });
       if (pump.Dsuction) Vs = Math.abs(Q) / area(pump.Dsuction);
-      const npsha = (pS - (fluid.Pv || 0)) / (rho * g) + Vs * Vs / (2 * g);
+      const npsha = (pS - (fluid.Pv || 0)) / (rho * g);
       Object.assign(r, { head, powerHyd: P, eta: Number.isFinite(eta) && eta > 0 ? eta : NaN, powerShaft: Number.isFinite(eta) && eta > 0 ? P / eta : NaN, npsha, npshr, npshMargin: npsha - npshr, shutoff: e.pc.shutoffS, curveKind: e.pc.kind, coef: e.pc.coef, suctionV: Vs });
       if (!e.closed && Number.isFinite(npshr) && npsha < npshr + 0.5) warnings.push(`${e.src.label}: NPSH margin only ${(npsha - npshr).toFixed(2)} m (NPSHa ${npsha.toFixed(2)} m, NPSHr ${npshr.toFixed(2)} m) – cavitation risk`);
       if (!e.closed && Q > e.pc.qmaxS * 1.0) warnings.push(`${e.src.label}: operating beyond the end of its curve`);

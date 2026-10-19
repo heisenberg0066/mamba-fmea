@@ -33,8 +33,8 @@ export function frictionFactor(Re, rr, method = 'colebrook') {
   return { f: X1 + R * (X2 + R * (X3 + X4)), regime: 'transitional' };
 }
 
-/** Hazen–Williams head loss (SI): h = 10.67 L Q^1.852 / (C^1.852 D^4.8704). */
-export function hazenWilliams(L, D, C, Q) { const a = Math.abs(Q); return Math.sign(Q) * 10.67 * L * Math.pow(a, 1.852) / (Math.pow(C, 1.852) * Math.pow(D, 4.8704)); }
+/** Hazen–Williams head loss (SI, EPANET constants): h = 10.667 L Q^1.852 / (C^1.852 D^4.871). */
+export function hazenWilliams(L, D, C, Q) { const a = Math.abs(Q); return Math.sign(Q) * 10.667 * L * Math.pow(a, 1.852) / (Math.pow(C, 1.852) * Math.pow(D, 4.871)); }
 
 export const area = (D) => Math.PI * D * D / 4;
 

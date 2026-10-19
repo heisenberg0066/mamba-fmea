@@ -127,13 +127,14 @@ export function severity(doc, fmId, seen = new Set()) {
 
 /** Failure-chain rows (used by risk analysis, optimisation, form view, reports). */
 export function rows(doc, opts = {}) {
-  const out = []; const usedAsCause = new Set(); Object.values(doc.failures).forEach((f) => f.causes.forEach((c) => usedAsCause.add(c)));
+  const out = []; const usedAsCause = new Set(), usedAsEffect = new Set(); Object.values(doc.failures).forEach((f) => { f.causes.forEach((c) => usedAsCause.add(c)); f.effects.forEach((e) => usedAsEffect.add(e)); });
   const settings = opts.settings || {};
   const order = nodeList(doc);
   for (const { node, depth } of order) {
     for (const fn of functionsOf(doc, node.id)) {
       for (const fm of Object.values(doc.failures).filter((x) => x.fn === fn.id)) {
-        if (!fm.causes.length && !fm.effects.length && usedAsCause.has(fm.id)) continue;
+        // pure causes (lowest level) and pure effects (top level) are not failure modes of their own row
+        if (!fm.causes.length && !fm.effects.length && (usedAsCause.has(fm.id) || usedAsEffect.has(fm.id))) continue;
         const causes = fm.causes.length ? fm.causes : [''];
         for (const fcId of causes) {
           const fc = fcId ? doc.failures[fcId] : null; const r = getRisk(doc, fm.id, fcId);

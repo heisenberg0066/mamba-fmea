@@ -55,14 +55,13 @@ export const LIBRARY = [
   { id: 'hyd-valve', cat: 'hydraulic', name: 'Valve', hyd: 'valve', functions: [{ text: 'Isolate or throttle the flow on demand', chars: [{ name: 'Kv / Cv', spec: '' }],
     failures: [{ text: 'Valve does not close (passes)', effects: [E('Cannot isolate section; maintenance hazard', 7)], causes: [C('Seat', 'Seat eroded or debris on seat'), C('Actuator', 'Actuator torque too low')] },
       { text: 'Valve sticks closed', effects: [E('No flow to consumers', 7)], causes: [C('Stem', 'Stem corrosion / packing too tight')] }] }] },
-  { id: 'hyd-check', cat: 'hydraulic', name: 'Check valve', hyd: 'check', functions: [{ text: 'Prevent reverse flow', chars: [] }],
-    failures: [] },
+  { id: 'hyd-check', cat: 'hydraulic', name: 'Check valve', hyd: 'check', functions: [{ text: 'Prevent reverse flow', chars: [], failures: [] }] },
   { id: 'hyd-tank', cat: 'hydraulic', name: 'Tank / reservoir', hyd: 'tank', functions: [{ text: 'Store fluid and keep the level / pressure in range', chars: [{ name: 'Level range', spec: '' }],
     failures: [{ text: 'Tank overflows', effects: [E('Spill, environmental damage', 7)], causes: [C('Level control', 'Level switch fails'), C('Inflow', 'Inflow larger than outflow at shutdown')] },
       { text: 'Tank runs dry', effects: [E('Pump runs dry, damage', 7)], causes: [C('Level control', 'Low-level alarm missing')] }] }] },
   { id: 'hyd-nozzle', cat: 'hydraulic', name: 'Nozzle / spray', hyd: 'nozzle', functions: [{ text: 'Discharge fluid at the required flow and pattern', chars: [{ name: 'Orifice diameter', spec: '' }],
     failures: [{ text: 'Nozzle blocked', effects: [E('No discharge at that point', 6)], causes: [C('Fluid', 'Particles in fluid, no strainer')] }] }] },
-  { id: 'hyd-fitting', cat: 'hydraulic', name: 'Fitting / joint', hyd: 'fitting', functions: [{ text: 'Connect pipes without leakage', chars: [] }],
+  { id: 'hyd-fitting', cat: 'hydraulic', name: 'Fitting / joint', hyd: 'fitting', functions: [{ text: 'Connect pipes without leakage', chars: [],
     failures: [{ text: 'Joint leaks', effects: [E('Fluid loss', 6)], causes: [C('Assembly', 'Joint not tightened / gasket damaged'), C('Thermal', 'Thermal cycling loosens the joint')] }] }] },
 ];
 LIBRARY.find((x) => x.id === 'hyd-check').functions[0].failures = [{ text: 'Check valve fails to close', effects: [E('Reverse flow drains the system / pump spins backwards', 7)], causes: [C('Disc', 'Disc or hinge stuck by debris')] }];
