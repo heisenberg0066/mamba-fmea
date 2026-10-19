@@ -1,0 +1,27 @@
+{
+  "name": "mamba-fmea",
+  "productName": "Mamba FMEA",
+  "version": "0.1.0",
+  "description": "Offline AIAG-VDA FMEA (DFMEA / PFMEA / FMEA-MSR) with Action Priority, control plans and a pipe-network hydraulics module",
+  "author": "Ammar",
+  "license": "MIT",
+  "main": "src/main.cjs",
+  "type": "module",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/run-tests.mjs",
+    "test:ui": "bash test/run-ui.sh",
+    "dist": "electron-builder --win --x64 --publish never"
+  },
+  "repository": { "type": "git", "url": "https://github.com/heisenberg0066/mamba-fmea.git" },
+  "dependencies": {
+    "coolprop-wasm": "6.6.0",
+    "exceljs": "^4.4.0"
+  },
+  "devDependencies": {
+    "electron": "33.4.11",
+    "electron-builder": "25.1.8",
+    "epanet-js": "^0.9.0",
+    "resedit": "^2.0.3"
+  }
+}
