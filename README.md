@@ -33,8 +33,8 @@ The builds are **unsigned**. Windows SmartScreen will warn you on first start: c
 
 ## Pipe hydraulics
 
-* **Network canvas:** drag‑and‑drop pipes, junctions, reservoirs, tanks, pumps (curves from points), valves (gate, globe, butterfly, check, PRV, FCV), fittings/minor losses and nozzles/emitters (K·Q^n).
-* **Friction:** Darcy–Weisbach with Colebrook–White or Swamee–Jain, or Hazen–Williams. There are material/roughness and standard pipe‑size libraries (ASME B36.10 NPS/schedule, EN 10255, DIN copper, PE/PVC SDR).
+* **Network canvas:** drag‑and‑drop pipes, junctions, reservoirs, tanks, pumps (curves from points), valves with an opening‑dependent K (gate, globe, ball, butterfly, plug, swing/lift check), fittings/minor losses and nozzles/emitters (K·Q^n).
+* **Friction:** Darcy–Weisbach with Colebrook–White or Swamee–Jain, or Hazen–Williams. There are material/roughness and standard pipe‑size libraries (ASME B36.10 NPS Sch 10/40/80, copper EN 1057, PE SDR 11/17) and a minor‑loss K library; generic pump curves with NPSHr.
 * **Fluids:** temperature‑dependent properties for water, sea water, glycol mixes, oils, fuels and gases. Properties come from the **shared engsuite / ThermoStudio core** (`src/vendor/engsuite-core/props.js`, `prop(out, fluid, {T, P})` with `nu` and `Pv`) on top of **CoolProp 6.6 (WASM)**. Built‑in correlations are the fallback. Run `node build/sync-engsuite.mjs ../engsuite` to update the copy.
 * **Solvers:** Newton global gradient algorithm (Todini–Pilati, EPANET‑style) and Hardy Cross.
 * **Pumps:** pump operating point, system curve, and **NPSHa vs NPSHr** with margin and warning.
