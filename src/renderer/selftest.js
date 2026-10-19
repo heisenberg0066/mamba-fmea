@@ -5,6 +5,7 @@ import { addComponentToFmea } from '../core/hyd/tofmea.js';
 import { run } from '../core/hyd/analysis.js';
 import * as M from '../core/fmea/model.js';
 import { setLang } from './i18n.js';
+import { fluidState } from '../core/fluids/fluids.js';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 export async function runSelftest(app, info) {
@@ -16,6 +17,7 @@ export async function runSelftest(app, info) {
   try {
     window.onerror = (m) => { lines.push('JS ERROR ' + m); ok = false; };
     window.addEventListener('unhandledrejection', (e) => { lines.push('UNHANDLED ' + (e.reason && e.reason.stack || e.reason)); ok = false; });
+    { const fs = fluidState('Water', 293.15); check('fluid layer uses engsuite core (CoolProp WASM)', fs.source === 'engsuite core (CoolProp)', `${fs.source}, ρ=${fs.rho.toFixed(2)}, ν=${fs.nu.toExponential(4)}, Pv=${fs.Pv.toFixed(0)} Pa`); }
     const P = S.project; check('sample project loaded', P.docs.length >= 2 && P.networks.length >= 1, `${P.docs.length} docs, ${P.networks.length} networks`);
     app.go('home'); await wait(150); check('home page renders', pageOk()); await shot('01-home');
     const d = P.docs.find((x) => x.type === 'DFMEA');

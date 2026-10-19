@@ -78,12 +78,21 @@ function coolprop(out, f, T, P) {
   const r = CP.PropsSI(CPOUT[out], 'T', T, 'P', P, f.cp); return r;
 }
 
+// Shared engine (engsuite / ThermoStudio core, props.js): prop(out, fluid, {T, P}) with out in rho mu nu Pv cp k a.
+// Fluids the engine does not know (or states it cannot evaluate) fall through to direct CoolProp, then built-in.
+const ENGINE_OUT = new Set(['rho', 'mu', 'nu', 'Pv', 'cp', 'k', 'a']);
+function engineProp(out, f, T, P) {
+  if (!ENGINE_OUT.has(out)) return NaN;
+  try { return ENGINE.prop(out, f.cp, out === 'Pv' ? { T } : { T, P }); } catch (_) { return NaN; }
+}
+export function engineKnows(fluid) { const f = fluidInfo(fluid); if (!ENGINE || !f.cp) return false; return Number.isFinite(engineProp('rho', f, 293.15, 101325)); }
+
 /** prop('rho', 'Water', {T: 293.15, P: 101325}) */
 export function prop(out, fluid, args = {}) {
   const f = fluidInfo(fluid); const T = args.T ?? 293.15, P = args.P ?? 101325;
   if (f.custom) { const c = f.custom; if (out === 'rho') return c.rho; if (out === 'mu') return c.mu ?? c.nu * c.rho; if (out === 'nu') return c.nu ?? c.mu / c.rho; if (out === 'Pv') return c.Pv ?? 2339; return NaN; }
   if (backend !== 'builtin' && f.cp) {
-    if (ENGINE && ENGINE.prop) { try { const v = ENGINE.prop(out === 'Pv' ? 'P' : out, f.cp === 'CO2' ? 'CO2' : f.cp === 'Water' ? 'Water' : f.cp, out === 'Pv' ? { T, x: 0 } : { T, P }); if (Number.isFinite(v)) return v; } catch (_) { /* fall through */ } }
+    if (ENGINE && ENGINE.prop) { const v = engineProp(out, f, T, P); if (Number.isFinite(v) && v > 0) return v; }
     if (CP && !(f.phase === 'gas' && f.id === 'Steam' && out === 'Pv')) { try { const v = coolprop(out, f, T, P); if (Number.isFinite(v) && v > 0) return v; } catch (_) { /* fall through */ } }
     if (backend === 'coolprop' && !CP && !ENGINE) throw new Error('CoolProp backend not loaded');
   }
@@ -95,7 +104,7 @@ export function fluidState(fluid, T = 293.15, P = 101325) {
   let Pv = NaN; try { Pv = prop('Pv', f, { T, P }); } catch (_) {}
   const warn = []; if (f.range && (T < f.range[0] || T > f.range[1])) warn.push(`${f.label}: T = ${(T - 273.15).toFixed(1)} °C outside correlation range ${(f.range[0] - 273.15).toFixed(0)}…${(f.range[1] - 273.15).toFixed(0)} °C`);
   if (f.phase === 'liquid' && Number.isFinite(Pv) && Pv > P) warn.push(`${f.label} boils at ${(T - 273.15).toFixed(1)} °C and ${(P / 1000).toFixed(1)} kPa (vapour pressure ${(Pv / 1000).toFixed(1)} kPa)`);
-  return { id: f.id, label: f.label, phase: f.phase, T, P, rho, mu, nu: mu / rho, Pv, gas: f.phase === 'gas', warn, source: backend !== 'builtin' && f.cp && (CP || ENGINE) ? 'CoolProp' : 'built-in' };
+  return { id: f.id, label: f.label, phase: f.phase, T, P, rho, mu, nu: mu / rho, Pv, gas: f.phase === 'gas', warn, source: backend === 'builtin' || !f.cp ? 'built-in' : ENGINE && engineKnows(f) ? 'engsuite core (CoolProp)' : CP ? 'CoolProp' : 'built-in' };
 }
 /** A user-defined constant-property fluid. */
 export function customFluid(id, label, { rho, mu, nu, Pv }) { const f = { id, label, phase: 'liquid', custom: { rho, mu, nu, Pv } }; BY.set(id.toLowerCase(), f); return f; }

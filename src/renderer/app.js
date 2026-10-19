@@ -1,6 +1,7 @@
 // App shell: top bar, navigation, project open/save/autosave, Excel/PDF, self-test.
 import CoolPropModule from '../vendor/coolprop/coolprop.js';
-import { setCoolProp, backendInfo } from '../core/fluids/fluids.js';
+import { setCoolProp, useEngine, backendInfo } from '../core/fluids/fluids.js';
+import * as engProps from '../vendor/engsuite-core/props.js';
 import { newProject, newDoc } from '../core/fmea/model.js';
 import { syncLinks } from '../core/fmea/link.js';
 import { sampleProject } from '../core/samples.js';
@@ -134,7 +135,7 @@ async function boot() {
   document.getElementById('ver').textContent = 'v' + info.version;
   store.ui.lang = info.lang || localStorage.getItem('mamba-fmea-lang') || 'en'; setLang(store.ui.lang);
   store.ui.units = localStorage.getItem('mamba-fmea-units') || 'SI';
-  try { const wasm = await window.host.readAsset('vendor/coolprop/coolprop.wasm'); setCoolProp(await CoolPropModule({ wasmBinary: wasm })); } catch (e) { console.warn('CoolProp not loaded, using built-in correlations', e); }
+  try { const wasm = await window.host.readAsset('vendor/coolprop/coolprop.wasm'); const cp = await CoolPropModule({ wasmBinary: wasm }); setCoolProp(cp); engProps.setCoolProp(cp); useEngine({ prop: engProps.prop }); } catch (e) { console.warn('CoolProp not loaded, using built-in correlations', e); }
   let loaded = false;
   if (info.openFile) { try { const r = await window.host.openProject(info.openFile); loadJSON(r.json, r.filePath); loaded = true; } catch (e) { toast(e.message, 'error'); } }
   if (!loaded && info.autosave) { try { const r = await window.host.openProject(info.autosave); loadJSON(r.json, null); store.dirty = true; loaded = true; toast(t('Restored the last session (autosave). Save it to keep it.')); } catch {} }

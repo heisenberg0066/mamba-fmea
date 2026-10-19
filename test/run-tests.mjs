@@ -136,6 +136,23 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mfmea-'));
   truthy('Fluids', 'engine hook: external ThermoStudio-style prop() is used when registered', (() => { F.setBackend('auto'); F.useEngine({ prop: (o) => (o === 'rho' ? 1234 : 1e-3) }); const v = F.prop('rho', 'Water', { T: 300, P: 1e5 }); F.useEngine(null); F.setBackend('builtin'); return v === 1234; })());
 }
 
+// ================= Fluids: shared engsuite (ThermoStudio) core =================
+{
+  const E = await import('../src/vendor/engsuite-core/props.js');
+  const cp = await CoolPropModule(); E.setCoolProp(cp); F.setCoolProp(cp);
+  const ref = (o, T) => { F.useEngine(null); F.setBackend('coolprop'); const v = F.prop(o, 'Water', { T, P: 101325 }); return v; };
+  for (const T of [283.15, 323.15]) for (const o of ['rho', 'mu', 'nu', 'Pv']) {
+    const r = ref(o, T); F.useEngine({ prop: E.prop }); F.setBackend('auto');
+    check('Fluids (engsuite core)', `water ${o} at ${(T - 273.15).toFixed(0)} °C via engsuite prop() = direct CoolProp`, F.prop(o, 'Water', { T, P: 101325 }), r, 1e-6, 'engsuite src/core/props.js (nu, Pv API)');
+  }
+  F.useEngine({ prop: E.prop }); F.setBackend('auto');
+  truthy('Fluids (engsuite core)', 'water state reports engsuite core as source', F.fluidState('Water', 293.15).source === 'engsuite core (CoolProp)');
+  check('Fluids (engsuite core)', 'CO₂ gas ρ at 20 °C, 1 atm (CoolProp rejects p below triple point; ideal-gas fallback)', F.prop('rho', 'CarbonDioxide', { T: 293.15, P: 101325 }), 1.839, 1.0, 'NIST webbook 1.8393 kg/m³');
+  truthy('Fluids (engsuite core)', 'fluid unknown to the engine (methanol) falls through to CoolProp', (() => { const v = F.prop('rho', 'Methanol', { T: 293.15, P: 101325 }); return Math.abs(v - 791.4) < 3 && F.fluidState('Methanol', 293.15).source === 'CoolProp'; })());
+  truthy('Fluids (engsuite core)', 'built-in fluid (MEG30) is unaffected by the engine', F.fluidState('MEG30', 293.15).source === 'built-in');
+  F.useEngine(null); F.setBackend('builtin');
+}
+
 // ================= Hydraulics: friction factors =================
 {
   const g = 'Friction factor';
